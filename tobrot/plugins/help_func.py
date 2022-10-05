@@ -97,12 +97,13 @@ async def user_settings(client: Client, message: Message):
 ┣ 👤 User : {message.from_user.first_name}
 ┣ 🖋 Username : @{message.from_user.username}
 ┣ 🆔 User ID : #ID{uid}
-┣ 🌐 DC ID : {did if did else ''}
+┣ 🌐 DC ID : {did or ''}
 ┣ 🔡 Language Code : {lcode.upper() if lcode else '-'}
 ┣ 💸 Premium : {str(message.from_user.is_premium).capitalize()}
 ┃
 ┗━━━━━━━━━━━━━━╹
 '''
+
     set_btn = InlineKeyboardMarkup([
         [InlineKeyboardButton("✏️ Prefix", callback_data = f"setpre {uid}"),
         InlineKeyboardButton("🗃 Theme", callback_data = f"settheme {uid}"),
@@ -219,12 +220,13 @@ async def settings_callback(client, query: CallbackQuery):
         elif getData[2] == 'True':
             AUTO_USERS.pop(usid)
             await query.answer(text="✅️ Your Leech Buttons Successfully Enabled ✅️ \n\n⛔️ Bulk Leech Disabled ⛔️", show_alert=True)
-            _text = f'''• ᑌՏᗴᖇ ᗩᑌTO ᒪᗴᗴᑕᕼ ՏᗴTTIᑎᘜՏ :
+            _text = '''• ᑌՏᗴᖇ ᗩᑌTO ᒪᗴᗴᑕᕼ ՏᗴTTIᑎᘜՏ :
 ┃
 ┣ <b>Auto Usage :</b> <i>♻️ Enabled ♻️</i>
 ┃
 ┣ <b>Use Leech Buttons :</b> <i>✅️ Enabled ✅️</i>
 ┗ <b>User Leech Type:</b> <i>Not Set !!</i>'''
+
             auto_btns = [[InlineKeyboardButton('🚫 Disable Leech Buttons 🚫', callback_data=f'setleech {usid} False')],
                         [InlineKeyboardButton("⌫ Back", callback_data = f"sethome {usid}")]]
             await query.edit_message_caption(caption=_text, reply_markup=InlineKeyboardMarkup(auto_btns))
@@ -270,11 +272,12 @@ async def settings_callback(client, query: CallbackQuery):
 ┣ 👤 User : {query.from_user.first_name}
 ┣ 🖋 Username : @{query.from_user.username}
 ┣ 🆔 User ID : #ID{uid}
-┣ 🌐 DC ID : {did if did else ''}
+┣ 🌐 DC ID : {did or ''}
 ┣ 🔡 Language Code : {lcode.upper() if lcode else '-'}
 ┣ 💸 Premium : {str(query.from_user.is_premium).capitalize()}
 ┃
 ┗━━━━━━━━━━━━━━╹'''
+
         set_btn = InlineKeyboardMarkup([
         [InlineKeyboardButton("✏️ Prefix", callback_data = f"setpre {uid}"),
         InlineKeyboardButton("🗃 Theme", callback_data = f"settheme {uid}"),
@@ -294,13 +297,12 @@ async def picture_add(client: Client, message: Message):
     '''/addpic command'''
     editable = await message.reply_text("Checking Input ...")
     resm = message.reply_to_message
-    msg_text = resm.text
-    if msg_text:
+    if msg_text := resm.text:
         if msg_text.startswith("http"):
             pic_add = msg_text.strip()
             await editable.edit("Adding your Link ...")
     elif resm.photo:
-        if not ((resm.photo and resm.photo.file_size <= TGH_LIMIT)):
+        if resm.photo.file_size > TGH_LIMIT:
             await editable.edit("This Media is Not Supported! Only Send Photos !!")
             return
         await editable.edit("Uploading to te.legra.ph Server ...")
@@ -329,10 +331,17 @@ async def pictures(client: Client, message: Message):
     else:
         to_edit = await message.reply_text("Generating Grid of your Images...")
         btn = [
-            [InlineKeyboardButton("<<", callback_data=f"pic -1"),
-            InlineKeyboardButton(">>", callback_data="pic 1")],
-            [InlineKeyboardButton("Remove Photo", callback_data="picsremove 0")]
+            [
+                InlineKeyboardButton("<<", callback_data="pic -1"),
+                InlineKeyboardButton(">>", callback_data="pic 1"),
+            ],
+            [
+                InlineKeyboardButton(
+                    "Remove Photo", callback_data="picsremove 0"
+                )
+            ],
         ]
+
         await to_edit.delete()
         await message.reply_photo(photo=PICS_LIST[0], caption=f'• Picture No. : 1 / {len(PICS_LIST)}', reply_markup=InlineKeyboardMarkup(btn))
 

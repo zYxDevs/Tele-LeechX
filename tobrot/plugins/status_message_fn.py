@@ -202,7 +202,7 @@ async def cancel_message_f(client, message):
         gidData = (message.text).split("_")
         g_id = gidData[1].strip()
         UserNames = await getUserName()
-        for i in range(0, len(UserNames)):
+        for i in range(len(UserNames)):
             if g_id.endswith(f'@{UserNames[i]}'):
                 g_id = g_id.replace(f'@{UserNames[i]}', '')
         LOGGER.info(f"Cancel GID: {g_id}")

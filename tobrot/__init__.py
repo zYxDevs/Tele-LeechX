@@ -251,9 +251,9 @@ LEECH_INVITE = getVar("LEECH_INVITE", "False")
 EX_LEECH_LOG = [int(chats) if (' ' not in getVar('EX_LEECH_LOG', '')) else int(chats) for chats in getVar('EX_LEECH_LOG', '').split()]
 EXCEP_CHATS = [int(chats) if (' ' not in getVar('EXCEP_CHATS', '')) else int(chats) for chats in getVar('EXCEP_CHATS', '').split()]
 BOT_PM = getVar("BOT_PM", "False")
-BOT_PM = True if BOT_PM.lower() == "true" else False
+BOT_PM = BOT_PM.lower() == "true"
 AUTO_LEECH = getVar("AUTO_LEECH", "False")
-AUTO_LEECH = True if AUTO_LEECH.lower() == "true" else False
+AUTO_LEECH = AUTO_LEECH.lower() == "true"
 
 #Status Photos & Pixabay API >>>>>>>>>>
 PICS_LIST = (getVar("PICS", "")).split()
@@ -274,7 +274,7 @@ FSUB_CHANNEL = getVar("FSUB_CHANNEL", "")
 # Quotes in Restart Message & Utils >>>>>>>>
 TIMEZONE = getVar("TIMEZONE", "Asia/Kolkata")
 RDM_QUOTE = getVar("RDM_QUOTE", "False")
-RDM_QUOTE = True if RDM_QUOTE.lower() == "true" else False
+RDM_QUOTE = RDM_QUOTE.lower() == "true"
 
 # Buttons in Start Message >>>>>>>>
 START_BTN1 = getVar("START_BTN1", "🛃 FXTorrentz 🛃")
@@ -317,8 +317,17 @@ if opath.exists("rclone.conf") and not opath.exists("rclone_bak.conf"):
 app = [ 
     Client("LeechBot", bot_token=TG_BOT_TOKEN[0], api_id=APP_ID[0], api_hash=API_HASH[0], workers=343), 
 ]
-for i in range(1, len(TG_BOT_TOKEN)):
-    app.append(Client(f"LeechBot-{i}", bot_token=TG_BOT_TOKEN[i], api_id=APP_ID[i], api_hash=API_HASH[i], workers=343))
+app.extend(
+    Client(
+        f"LeechBot-{i}",
+        bot_token=TG_BOT_TOKEN[i],
+        api_id=APP_ID[i],
+        api_hash=API_HASH[i],
+        workers=343,
+    )
+    for i in range(1, len(TG_BOT_TOKEN))
+)
+
 if len(app) > 1:
     LOGGER.info(f"[Multi Client Initiated] Total Bots : {len(app)}")
 
