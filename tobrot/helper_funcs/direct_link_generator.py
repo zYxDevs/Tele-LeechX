@@ -215,12 +215,10 @@ def yandex_disk(url: str) -> str:
     try:
         text_url = re.findall(r'\bhttps?://.*yadi\.sk\S+', url)[0]
     except IndexError:
-        reply = "`No Yandex.Disk links found`\n"
-        return reply
+        return "`No Yandex.Disk links found`\n"
     api = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key={}'
     try:
-        dl_url = requests.get(api.format(text_url)).json()['href']
-        return dl_url
+        return requests.get(api.format(text_url)).json()['href']
     except KeyError:
         raise DirectDownloadLinkException("`Error: File not found / Download limit reached`\n")
 
@@ -240,8 +238,7 @@ def cm_ru(url: str) -> str:
         data = json.loads(result)
     except json.decoder.JSONDecodeError:
         raise DirectDownloadLinkException("`Error: Can't extract the link`\n")
-    dl_url = data['download']
-    return dl_url
+    return data['download']
 
 
 def uptobox(url: str) -> str:
@@ -289,8 +286,7 @@ def mediafire(url: str) -> str:
         raise DirectDownloadLinkException("`No MediaFire links found`\n")
     page = BeautifulSoup(requests.get(text_url).content, 'lxml')
     info = page.find('a', {'aria-label': 'Download file'})
-    dl_url = info.get('href')
-    return dl_url
+    return info.get('href')
 
 
 def osdn(url: str) -> str:
@@ -320,8 +316,7 @@ def github(url: str) -> str:
         raise DirectDownloadLinkException("`No GitHub Releases links found`\n")
     download = requests.get(text_url, stream=True, allow_redirects=False)
     try:
-        dl_url = download.headers["location"]
-        return dl_url
+        return download.headers["location"]
     except KeyError:
         raise DirectDownloadLinkException("`Error: Can't extract the link`\n")
 
@@ -346,8 +341,7 @@ def hxfile(url: str) -> str:
     Based on https://github.com/zevtyardt/lk21
              https://github.com/SlamDevs/slam-mirrorbot """
     bypasser = lk21.Bypass()
-    dl_url=bypasser.bypass_filesIm(url)
-    return dl_url
+    return bypasser.bypass_filesIm(url)
 
 
 def anonfiles(url: str) -> str:
@@ -355,8 +349,7 @@ def anonfiles(url: str) -> str:
     Based on https://github.com/zevtyardt/lk21
              https://github.com/SlamDevs/slam-mirrorbot """
     bypasser = lk21.Bypass()
-    dl_url=bypasser.bypass_anonfiles(url)
-    return dl_url
+    return bypasser.bypass_anonfiles(url)
 
 
 def letsupload(url: str) -> str:
@@ -379,10 +372,8 @@ def fembed(link: str) -> str:
              https://github.com/SlamDevs/slam-mirrorbot """
     bypasser = lk21.Bypass()
     dl_url=bypasser.bypass_fembed(link)
-    lst_link = []
     count = len(dl_url)
-    for i in dl_url:
-        lst_link.append(dl_url[i])
+    lst_link = [dl_url[i] for i in dl_url]
     return lst_link[count-1]
 
 
@@ -392,10 +383,8 @@ def sbembed(link: str) -> str:
              https://github.com/SlamDevs/slam-mirrorbot """
     bypasser = lk21.Bypass()
     dl_url=bypasser.bypass_sbembed(link)
-    lst_link = []
     count = len(dl_url)
-    for i in dl_url:
-        lst_link.append(dl_url[i])
+    lst_link = [dl_url[i] for i in dl_url]
     return lst_link[count-1]
 
 
@@ -409,7 +398,9 @@ def pixeldrain(url: str) -> str:
     if resp["success"]:
         return dl_link
     else:
-        raise DirectDownloadLinkException("ERROR: Cant't download due {}.".format(resp.text["value"]))
+        raise DirectDownloadLinkException(
+            f"""ERROR: Cant't download due {resp.text["value"]}."""
+        )
 
 
 def antfiles(url: str) -> str:
@@ -417,8 +408,7 @@ def antfiles(url: str) -> str:
     Based on https://github.com/zevtyardt/lk21
              https://github.com/SlamDevs/slam-mirrorbot """
     bypasser = lk21.Bypass()
-    dl_url=bypasser.bypass_antfiles(url)
-    return dl_url
+    return bypasser.bypass_antfiles(url)
 
 
 def streamtape(url: str) -> str:
@@ -426,8 +416,7 @@ def streamtape(url: str) -> str:
     Based on https://github.com/zevtyardt/lk21
              https://github.com/SlamDevs/slam-mirrorbot """
     bypasser = lk21.Bypass()
-    dl_url=bypasser.bypass_streamtape(url)
-    return dl_url
+    return bypasser.bypass_streamtape(url)
 
 
 def racaty(url: str) -> str:
@@ -475,38 +464,39 @@ def fichier(link: str) -> str:
       raise DirectDownloadLinkException("ERROR: File not found/The link you entered is wrong!")
     soup = BeautifulSoup(req.content, 'lxml')
     if soup.find("a", {"class": "ok btn-general btn-orange"}) is not None:
-      dl_url = soup.find("a", {"class": "ok btn-general btn-orange"})["href"]
-      if dl_url is None:
-        raise DirectDownloadLinkException("ERROR: Unable to generate Direct Link 1fichier!")
-      else:
-        return dl_url
-    else:
-      if len(soup.find_all("div", {"class": "ct_warn"})) == 2:
+        dl_url = soup.find("a", {"class": "ok btn-general btn-orange"})["href"]
+        if dl_url is None:
+          raise DirectDownloadLinkException("ERROR: Unable to generate Direct Link 1fichier!")
+        else:
+          return dl_url
+    elif len(soup.find_all("div", {"class": "ct_warn"})) == 2:
         str_2 = soup.find_all("div", {"class": "ct_warn"})[-1]
         if "you must wait" in str(str_2).lower():
-          numbers = [int(word) for word in str(str_2).split() if word.isdigit()]
-          if len(numbers) == 0:
-            raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
-          else:
-            raise DirectDownloadLinkException(f"ERROR: 1fichier is on a limit. Please wait {numbers[0]} minute.")
+            if numbers := [
+                int(word) for word in str(str_2).split() if word.isdigit()
+            ]:
+                raise DirectDownloadLinkException(f"ERROR: 1fichier is on a limit. Please wait {numbers[0]} minute.")
+            else:
+                raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
         elif "protect access" in str(str_2).lower():
           raise DirectDownloadLinkException("ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b>\n<code>/mirror https://1fichier.com/?smmtd8twfpm66awbqz04::love you</code>\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!")
         else:
-          raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
-      elif len(soup.find_all("div", {"class": "ct_warn"})) == 3:
+            raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
+    elif len(soup.find_all("div", {"class": "ct_warn"})) == 3:
         str_1 = soup.find_all("div", {"class": "ct_warn"})[-2]
         str_3 = soup.find_all("div", {"class": "ct_warn"})[-1]
         if "you must wait" in str(str_1).lower():
-          numbers = [int(word) for word in str(str_1).split() if word.isdigit()]
-          if len(numbers) == 0:
-            raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
-          else:
-            raise DirectDownloadLinkException(f"ERROR: 1fichier is on a limit. Please wait {numbers[0]} minute.")
+            if numbers := [
+                int(word) for word in str(str_1).split() if word.isdigit()
+            ]:
+                raise DirectDownloadLinkException(f"ERROR: 1fichier is on a limit. Please wait {numbers[0]} minute.")
+            else:
+                raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
         elif "bad password" in str(str_3).lower():
           raise DirectDownloadLinkException("ERROR: The password you entered is wrong!")
         else:
-          raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
-      else:
+            raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
+    else:
         raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
 
 
@@ -518,9 +508,8 @@ def solidfiles(url: str) -> str:
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36'
     }
     pageSource = requests.get(url, headers = headers).text
-    mainOptions = str(re.search(r'viewerOptions\'\,\ (.*?)\)\;', pageSource).group(1))
-    dl_url = json.loads(mainOptions)["downloadUrl"]
-    return dl_url
+    mainOptions = str(re.search(r'viewerOptions\'\,\ (.*?)\)\;', pageSource)[1])
+    return json.loads(mainOptions)["downloadUrl"]
 
 
 def krakenfiles(page_link: str) -> str:
@@ -620,10 +609,10 @@ def gplink(url):
 
     scraper = cloudscraper.create_scraper(allow_brotli=False)
     res = scraper.get(url)
-    
+
     h = { "referer": res.url }
     res = scraper.get(url, headers=h)
-    
+
     bs4 = BeautifulSoup(res.content, 'lxml')
     inputs = bs4.find_all('input')
     data = { input.get('name'): input.get('value') for input in inputs }
@@ -632,9 +621,9 @@ def gplink(url):
         'content-type': 'application/x-www-form-urlencoded',
         'x-requested-with': 'XMLHttpRequest'
     }
-    
+
     time.sleep(10) # !important
-    
+
     p = urlparse(url)
     final_url = f'{p.scheme}://{p.netloc}/links/go'
     res = scraper.post(final_url, data=data, headers=h).json()
@@ -743,10 +732,11 @@ def linkvertise(url: str):
         if response["success"]: break
     data = client.get(f"https://publisher.linkvertise.com/api/v1/redirect/link/static{id_name[0]}").json()
     out = {
-        'timestamp':int(str(time.time_ns())[0:13]),
-        'random':"6548307", 
-        'link_id':data["data"]["link"]["id"]
+        'timestamp': int(str(time.time_ns())[:13]),
+        'random': "6548307",
+        'link_id': data["data"]["link"]["id"],
     }
+
     options = {
         'serial': base64.b64encode(json.dumps(out).encode()).decode()
     }
@@ -755,24 +745,6 @@ def linkvertise(url: str):
     url_submit = f"https://publisher.linkvertise.com/api/v1/redirect/link{id_name[0]}/target?X-Linkvertise-UT={user_token}"
     data = client.post(url_submit, json=options).json()
     return data
-
-    '''client = requests.Session()
-    res = client.get(url)
-    ref = re.findall("action[ ]{0,}=[ ]{0,}['|\"](.*?)['|\"]", res.text)[0]
-    h = {'referer': ref}
-    res = client.get(url, headers=h)
-    bs4 = BeautifulSoup(res.content, 'lxml')
-    inputs = bs4.find_all('input')
-    data = { input.get('name'): input.get('value') for input in inputs }
-    h = {
-        'content-type': 'application/x-www-form-urlencoded',
-        'x-requested-with': 'XMLHttpRequest'
-    }
-    p = urlparse(url)
-    final_url = f'{p.scheme}://{p.netloc}/links/go'
-    time.sleep(3.1)
-    res = client.post(final_url, data=data, headers=h).json()
-    return res'''
 
 def droplink(url):
     api = "https://api.emilyx.in/api"
@@ -785,25 +757,20 @@ def droplink(url):
         res = resp.json()
     except Exception:
         return "API UnResponsive / Invalid Link !"
-    if res["success"] is True:
-        return res["url"]
-    else:
-        return res["msg"]
+    return res["url"] if res["success"] is True else res["msg"]
 
 def gofile(url: str):
     api_uri = 'https://api.gofile.io'
     client = requests.Session()
-    res = client.get(api_uri+'/createAccount').json()
+    res = client.get(f'{api_uri}/createAccount').json()
     data = {
         'contentId': url.split('/')[-1],
         'token': res['data']['token'],
         'websiteToken': 'websiteToken',
         'cache': 'true'
     }
-    res = client.get(api_uri+'/getContent', params=data).json()
-    content = []
-    for item in res['data']['contents'].values():
-        content.append(item)
+    res = client.get(f'{api_uri}/getContent', params=data).json()
+    content = list(res['data']['contents'].values())
     #return content
     return {
         'accountToken': data['token'],
@@ -821,15 +788,17 @@ def RecaptchaV3(ANCHOR_URL):
         'content-type': 'application/x-www-form-urlencoded'
     })
     matches = re.findall(r'([api2|enterprise]+)\/anchor\?(.*)', ANCHOR_URL)[0]
-    url_base += matches[0]+'/'
+    url_base += f'{matches[0]}/'
     params = matches[1]
-    res = client.get(url_base+'anchor', params=params)
+    res = client.get(f'{url_base}anchor', params=params)
     token = re.findall(r'"recaptcha-token" value="(.*?)"', res.text)[0]
     params = dict(pair.split('=') for pair in params.split('&'))
     post_data = post_data.format(params["v"], token, params["k"], params["co"])
-    res = client.post(url_base+'reload', params=f'k={params["k"]}', data=post_data)
-    answer = re.findall(r'"rresp","(.*?)"', res.text)[0]    
-    return answer
+    res = client.post(
+        f'{url_base}reload', params=f'k={params["k"]}', data=post_data
+    )
+
+    return re.findall(r'"rresp","(.*?)"', res.text)[0]
 
 
 def ouo(url: str) -> str:
@@ -863,40 +832,40 @@ def ouo(url: str) -> str:
 
 
 def upindia(url: str) -> str:
-  REGEX = r'(http[s]*://(?:upindia|uploadfile|upload)\.(?:cc|mobi)+/\d{6}/\S{7})'
-  match = re.findall(REGEX, url)
-  if not match:
-    return "The Provided Link Do not Match with the Standard Format."
-  
-  session = requests.Session()
-  url = match[0]
-  LOGGER.debug(f"Matched URL: {url}")
-  file_id, file_code = url.split('/')[-2:]
-  LOGGER.debug(f"File Code: {file_code}, File Id: {file_id}")
-  url_parts = urllib.parse.urlparse(url)
-  req = session.get(url)
-  page_html = req.text
-  itemlink = re.findall(r'class="download_box_new[^"]*".*itemlink="([^">]+)"', page_html)
-  if not itemlink:
-    return "File Does Not Exist!"
-  
-  itemlink = itemlink[0]
-  itemlink_parsed = urllib.parse.parse_qs(itemlink)
-  file_key = itemlink_parsed['down_key'][0]
-  LOGGER.debug(f"file_key: {file_key}")
-  params = {
-    'file_id':file_id,
-    'file_code':file_code,
-    'file_key':file_key,
-    'serv':1
-  }
-  req_url = url_parts.scheme + '://' +  url_parts.netloc + "/download"
-  r = session.head(req_url, params=params)
-  dl_url = r.headers.get('location', None)
-  if dl_url is None:
-    return "This File cannot be Downloaded at this moment!"
-  LOGGER.debug(dl_url)
-  return dl_url
+    REGEX = r'(http[s]*://(?:upindia|uploadfile|upload)\.(?:cc|mobi)+/\d{6}/\S{7})'
+    match = re.findall(REGEX, url)
+    if not match:
+      return "The Provided Link Do not Match with the Standard Format."
+
+    session = requests.Session()
+    url = match[0]
+    LOGGER.debug(f"Matched URL: {url}")
+    file_id, file_code = url.split('/')[-2:]
+    LOGGER.debug(f"File Code: {file_code}, File Id: {file_id}")
+    url_parts = urllib.parse.urlparse(url)
+    req = session.get(url)
+    page_html = req.text
+    itemlink = re.findall(r'class="download_box_new[^"]*".*itemlink="([^">]+)"', page_html)
+    if not itemlink:
+      return "File Does Not Exist!"
+
+    itemlink = itemlink[0]
+    itemlink_parsed = urllib.parse.parse_qs(itemlink)
+    file_key = itemlink_parsed['down_key'][0]
+    LOGGER.debug(f"file_key: {file_key}")
+    params = {
+      'file_id':file_id,
+      'file_code':file_code,
+      'file_key':file_key,
+      'serv':1
+    }
+    req_url = f'{url_parts.scheme}://{url_parts.netloc}/download'
+    r = session.head(req_url, params=params)
+    dl_url = r.headers.get('location', None)
+    if dl_url is None:
+      return "This File cannot be Downloaded at this moment!"
+    LOGGER.debug(dl_url)
+    return dl_url
 
 
 def hubdrive(url: str) -> str:
@@ -906,13 +875,12 @@ def hubdrive(url: str) -> str:
     client = requests.Session()
     client.cookies.update({'crypt': HUB_CRYPT})
     res = client.get(url)
-    info_parsed = {}
     title = re.findall(r'>(.*?)<\/h4>', res.text)[0]
     info_chunks = re.findall(r'>(.*?)<\/td>', res.text)
-    info_parsed['title'] = title
+    info_parsed = {'title': title}
     for i in range(0, len(info_chunks), 2):
         info_parsed[info_chunks[i]] = info_chunks[i+1]
-    info_parsed = info_parsed 
+    info_parsed = info_parsed
     info_parsed['error'] = False
     up = urlparse(url)
     req_url = f"{up.scheme}://{up.netloc}/ajax.php?ajax=download"
@@ -928,7 +896,7 @@ def hubdrive(url: str) -> str:
     info_parsed['gdrive_url'] = f"https://drive.google.com/open?id={gd_id}"
     info_parsed['src_url'] = url
     if info_parsed['error']:
-        raise DirectDownloadLinkException(f"Error in HubDrive Link")
+        raise DirectDownloadLinkException("Error in HubDrive Link")
     return info_parsed
 
 
@@ -942,7 +910,7 @@ def adfly(url: str) -> str:
         out['error'] = True
         return out
     a, b = '', ''
-    for i in range(0, len(code)):
+    for i in range(len(code)):
         if i % 2 == 0: a += code[i]
         else: b = code[i] + b
     code = ysmm
@@ -967,7 +935,7 @@ def adfly(url: str) -> str:
         url = unquote(re.sub(r'(.*?)dest=', '', url))
     out['bypassed_url'] = url
     if out['error']:
-        raise DirectDownloadLinkException(f"Error in Adfly Link")
+        raise DirectDownloadLinkException("Error in Adfly Link")
     return out
 
 
@@ -993,7 +961,7 @@ def sourceforge(url: str) -> str:
 
 def sourceforge2(url: str) -> str:
     """ Sourceforge Master.dl bypass """
-    return f"{url}" + "?viasf=1"
+    return f"{url}?viasf=1"
 
 
 def androidatahost(url: str) -> str:
@@ -1024,14 +992,11 @@ def androidfilehost(url: str) -> str:
         link = re.findall(r"\bhttps?://.*androidfilehost.*fid.*\S+", url)[0]
     except IndexError:
         raise DirectDownloadLinkException("`No AFH links found`\n")
-        return reply
     fid = re.findall(r"\?fid=(.*)", link)[0]
     session = requests.Session()
     user_agent = useragent()
     if user_agent == "":
         raise DirectDownloadLinkException("`Error: Can't find Mirrors for the link`\n")
-        error = "Error: Can't find Mirrors for the link"
-        return error
     headers = {"user-agent": user_agent}
     res = session.get(link, headers=headers, allow_redirects=True)
     headers = {
@@ -1105,8 +1070,7 @@ def wetransfer(url: str):
     elif len(params) == 3:
         transfer_id, recipient_id, security_hash = params
     else:
-        raise DirectDownloadLinkException(f"Error in wetransfer.com Link")
-        return None
+        raise DirectDownloadLinkException("Error in wetransfer.com Link")
     j = {
         "intent": "entire_transfer",
         "security_hash": security_hash,
@@ -1116,12 +1080,7 @@ def wetransfer(url: str):
     s = ression()
     r = s.get('https://wetransfer.com/')
     m = re.search('name="csrf-token" content="([^"]+)"', r.text)
-    s.headers.update(
-        {
-            "x-csrf-token": m.group(1),
-            "x-requested-with": "XMLHttpRequest",
-        }
-    )
+    s.headers.update({"x-csrf-token": m[1], "x-requested-with": "XMLHttpRequest"})
     r = s.post(WETRANSFER_DOWNLOAD_URL.format(transfer_id=transfer_id),
                json=j)
     j = r.json()
@@ -1145,8 +1104,7 @@ def shorte_st(url: str):
     }
     time.sleep(5)
     res = client.get(final_url, params=params)
-    dest_url = re.findall('"(.*?)"', res.text)[1].replace(r'\/','/')
-    return dest_url
+    return re.findall('"(.*?)"', res.text)[1].replace(r'\/','/')
 
 
 def mdisk(url: str) -> str:
@@ -1177,31 +1135,30 @@ def drivefire_dl(url: str):
 
     client = requests.Session()
     client.cookies.update({'crypt': DRIVEFIRE_CRYPT})
-    
+
     res = client.get(url)
 
-    info_parsed = {}
     title = re.findall(r'>(.*?)<\/h4>', res.text)[0]
     info_chunks = re.findall(r'>(.*?)<\/td>', res.text)
-    info_parsed['title'] = title
+    info_parsed = {'title': title}
     for i in range(0, len(info_chunks), 2):
         info_parsed[info_chunks[i]] = info_chunks[i+1]
-    
+
     info_parsed['error'] = False
-    
+
     up = urlparse(url)
     req_url = f"{up.scheme}://{up.netloc}/ajax.php?ajax=download"
-    
+
     file_id = url.split('/')[-1]
     data = { 'id': file_id }
     headers = {
         'x-requested-with': 'XMLHttpRequest'
     }
-    
+
     try:
         res = client.post(req_url, headers=headers, data=data).json()['file']
     except: return {'error': True, 'src_url': url}
-    
+
     decoded_id = res.rsplit('/', 1)[-1]
     info_parsed = f"https://drive.google.com/file/d/{decoded_id}"
 
@@ -1215,33 +1172,32 @@ def katdrive_dl(url):
 
     client = requests.Session()
     client.cookies.update({'crypt': KATDRIVE_CRYPT})
-    
+
     res = client.get(url)
 
-    info_parsed = {}
     title = re.findall(r'>(.*?)<\/h4>', res.text)[0]
     info_chunks = re.findall(r'>(.*?)<\/td>', res.text)
-    info_parsed['title'] = title
+    info_parsed = {'title': title}
     for i in range(0, len(info_chunks), 2):
         info_parsed[info_chunks[i]] = info_chunks[i+1]
-    
+
     info_parsed['error'] = False
-    
+
     up = urlparse(url)
     req_url = f"{up.scheme}://{up.netloc}/ajax.php?ajax=download"
-    
+
     file_id = url.split('/')[-1]
     data = { 'id': file_id }
     headers = {
         'x-requested-with': 'XMLHttpRequest'
     }
-    
+
     try:
         res = client.post(req_url, headers=headers, data=data).json()['file']
     except: return {'error': True, 'src_url': url}
-    
+
     gd_id = re.findall('gd=(.*)', res, re.DOTALL)[0]
-    
+
     info_parsed['gdrive_url'] = f"https://drive.google.com/open?id={gd_id}"
     info_parsed['src_url'] = url
 
@@ -1255,31 +1211,30 @@ def kolop_dl(url):
 
     client = requests.Session()
     client.cookies.update({'crypt': KOLOP_CRYPT})
-    
+
     res = client.get(url)
-    info_parsed = {}
     title = re.findall(r'>(.*?)<\/h4>', res.text)[0]
     info_chunks = re.findall(r'>(.*?)<\/td>', res.text)
-    info_parsed['title'] = title
+    info_parsed = {'title': title}
     for i in range(0, len(info_chunks), 2):
         info_parsed[info_chunks[i]] = info_chunks[i+1]
     info_parsed['error'] = False
-    
+
     up = urlparse(url)
     req_url = f"{up.scheme}://{up.netloc}/ajax.php?ajax=download"
-    
+
     file_id = url.split('/')[-1]
     data = { 'id': file_id }
     headers = {
         'x-requested-with': 'XMLHttpRequest'
     }
-    
+
     try:
         res = client.post(req_url, headers=headers, data=data).json()['file']
     except: return {'error': True, 'src_url': url}
-    
+
     gd_id = re.findall('gd=(.*)', res, re.DOTALL)[0]
-    
+
     info_parsed['gdrive_url'] = f"https://drive.google.com/open?id={gd_id}"
     info_parsed['src_url'] = url
 
@@ -1293,33 +1248,32 @@ def drivebuzz_dl(url):
 
     client = requests.Session()
     client.cookies.update({'crypt': DRIVEBUZZ_CRYPT})
-    
+
     res = client.get(url)
 
-    info_parsed = {}
     title = re.findall(r'>(.*?)<\/h4>', res.text)[0]
     info_chunks = re.findall(r'>(.*?)<\/td>', res.text)
-    info_parsed['title'] = title
+    info_parsed = {'title': title}
     for i in range(0, len(info_chunks), 2):
         info_parsed[info_chunks[i]] = info_chunks[i+1]
-    
+
     info_parsed['error'] = False
-    
+
     up = urlparse(url)
     req_url = f"{up.scheme}://{up.netloc}/ajax.php?ajax=download"
-    
+
     file_id = url.split('/')[-1]
     data = { 'id': file_id }
     headers = {
         'x-requested-with': 'XMLHttpRequest'
     }
-    
+
     try:
         res = client.post(req_url, headers=headers, data=data).json()['file']
     except: return {'error': True, 'src_url': url}
-    
+
     gd_id = re.findall('gd=(.*)', res, re.DOTALL)[0]
-    
+
     info_parsed['gdrive_url'] = f"https://drive.google.com/open?id={gd_id}"
     info_parsed['src_url'] = url
 
@@ -1333,33 +1287,32 @@ def gadrive_dl(url):
 
     client = requests.Session()
     client.cookies.update({'crypt': GADRIVE_CRYPT})
-    
+
     res = client.get(url)
 
-    info_parsed = {}
     title = re.findall(r'>(.*?)<\/h4>', res.text)[0]
     info_chunks = re.findall(r'>(.*?)<\/td>', res.text)
-    info_parsed['title'] = title
+    info_parsed = {'title': title}
     for i in range(0, len(info_chunks), 2):
         info_parsed[info_chunks[i]] = info_chunks[i+1]
-    
+
     info_parsed['error'] = False
-    
+
     up = urlparse(url)
     req_url = f"{up.scheme}://{up.netloc}/ajax.php?ajax=download"
-    
+
     file_id = url.split('/')[-1]
     data = { 'id': file_id }
     headers = {
         'x-requested-with': 'XMLHttpRequest'
     }
-    
+
     try:
         res = client.post(req_url, headers=headers, data=data).json()['file']
     except: return {'error': True, 'src_url': url}
-    
+
     gd_id = re.findall('gd=(.*)', res, re.DOTALL)[0]
-    
+
     info_parsed['gdrive_url'] = f"https://drive.google.com/open?id={gd_id}"
     info_parsed['src_url'] = url
 
@@ -1367,19 +1320,19 @@ def gadrive_dl(url):
 
 def try2link_bypass(url):
 	client = cloudscraper.create_scraper(allow_brotli=False)
-	
+
 	url = url[:-1] if url[-1] == '/' else url
-	
+
 	params = (('d', int(time.time()) + (60 * 4)),)
 	r = client.get(url, params=params, headers= {'Referer': 'https://newforex.online/'})
-	
+
 	soup = BeautifulSoup(r.text, 'html.parser')
 	inputs = soup.find(id="go-link").find_all(name="input")
 	data = { input.get('name'): input.get('value') for input in inputs }	
 	time.sleep(7)
-	
+
 	headers = {'Host': 'try2link.com', 'X-Requested-With': 'XMLHttpRequest', 'Origin': 'https://try2link.com', 'Referer': url}
-	
+
 	bypassed_url = client.post('https://try2link.com/links/go', headers=headers,data=data)
 	return bypassed_url.json()["url"]
 		
@@ -1430,10 +1383,7 @@ def megaup(url):
         res = resp.json()
     except Exception:
         return "API UnResponsive / Invalid Link !"
-    if res["success"] is True:
-        return res["url"]
-    else:
-        return res["msg"]
+    return res["url"] if res["success"] is True else res["msg"]
 
 def mediafire(url: str) -> str:
     """ MediaFire direct link generator """
@@ -1507,9 +1457,9 @@ def filecrypt(url):
 
 def shareus(url):
     token = url.split("=")[-1]
-    bypassed_url = "https://us-central1-my-apps-server.cloudfunctions.net/r?shortid="+ token
-    response = requests.get(bypassed_url).text
-    return response
+    bypassed_url = f"https://us-central1-my-apps-server.cloudfunctions.net/r?shortid={token}"
+
+    return requests.get(bypassed_url).text
 
 def shortlingly(url):
     client = cloudscraper.create_scraper(allow_brotli=False)
@@ -1521,19 +1471,19 @@ def shortlingly(url):
     url = url[:-1] if url[-1] == '/' else url
 
     code = url.split("/")[-1]
-    
+
     final_url = f"{DOMAIN}/{code}"
 
     resp = client.get(final_url)
     soup = BeautifulSoup(resp.content, "html.parser")
-    
+
     try: inputs = soup.find(id="go-link").find_all(name="input")
     except: return "Incorrect Link"
-    
+
     data = { input.get('name'): input.get('value') for input in inputs }
 
     h = { "x-requested-with": "XMLHttpRequest" }
-    
+
     time.sleep(5)
     r = client.post(f"{DOMAIN}/links/go", data=data, headers=h)
     try:
@@ -1550,19 +1500,19 @@ def gyanilinks(url):
     url = url[:-1] if url[-1] == '/' else url
 
     code = url.split("/")[-1]
-    
+
     final_url = f"{DOMAIN}/{code}"
 
     resp = client.get(final_url)
     soup = BeautifulSoup(resp.content, "html.parser")
-    
+
     try: inputs = soup.find(id="go-link").find_all(name="input")
     except: return "Incorrect Link"
-    
+
     data = { input.get('name'): input.get('value') for input in inputs }
 
     h = { "x-requested-with": "XMLHttpRequest" }
-    
+
     time.sleep(5)
     r = client.post(f"{DOMAIN}/links/go", data=data, headers=h)
     try:
@@ -1572,7 +1522,6 @@ def gyanilinks(url):
 def pixl(url):
     count = 1
     dl_msg = ""
-    currentpage = 1
     settotalimgs = True
     totalimages = ""
     client = cloudscraper.create_scraper(allow_brotli=False)
@@ -1591,7 +1540,7 @@ def pixl(url):
         url = None
     for ref in thmbnailanch:
         imgdata = client.get(ref.attrs["href"])
-        if not imgdata.status_code == 200:
+        if imgdata.status_code != 200:
             time.sleep(5)
             continue
         imghtml = BeautifulSoup(imgdata.text, "html.parser")
@@ -1600,11 +1549,10 @@ def pixl(url):
         currentimg = currentimg.replace(" ", "%20")
         dl_msg += f"{count}. {currentimg}\n"
         count += 1
-    currentpage += 1
+    currentpage = 1 + 1
     fld_msg = f"Your provided Pixl.is link is of Folder and I've Found {count - 1} files in the folder.\n"
     fld_link = f"\nFolder Link: {url}\n"
-    final_msg = fld_link + "\n" + fld_msg + "\n" + dl_msg
-    return final_msg
+    return fld_link + "\n" + fld_msg + "\n" + dl_msg
 
 def siriganbypass(url):
     client = requests.Session()
@@ -1619,10 +1567,7 @@ def siriganbypass(url):
 
 def parse_info_sharer(res):
     f = re.findall(">(.*?)<\/td>", res.text)
-    info_parsed = {}
-    for i in range(0, len(f), 3):
-        info_parsed[f[i].lower().replace(' ', '_')] = f[i+2]
-    return info_parsed
+    return {f[i].lower().replace(' ', '_'): f[i+2] for i in range(0, len(f), 3)}
 
 def sharer_pw(url, forced_login=False):
     client = cloudscraper.create_scraper(allow_brotli=False)
@@ -1650,13 +1595,13 @@ def sharer_pw(url, forced_login=False):
     if not forced_login:
         data['nl'] = 1
     try: 
-        res = client.post(url+'/dl', headers=headers, data=data).json()
+        res = client.post(f'{url}/dl', headers=headers, data=data).json()
     except:
         return info_parsed
     if 'url' in res and res['url']:
         info_parsed['error'] = False
         info_parsed['gdrive_link'] = res['url']
-    if len(ddl_btn) and not forced_login and not 'url' in info_parsed:
+    if len(ddl_btn) and not forced_login and 'url' not in info_parsed:
         # retry download via login
         return sharer_pw(url, forced_login=True)
     return info_parsed["gdrive_link"]
@@ -1665,8 +1610,7 @@ def bypass_vip(url):
     try:
         payload = {"url": url}
         url_bypass = requests.post("https://api.bypass.vip/", data=payload).json()
-        bypassed = url_bypass["destination"]
-        return bypassed
+        return url_bypass["destination"]
     except:
         return "Could not Bypass your URL :("
 
@@ -1687,14 +1631,14 @@ def rocklinks(url):
 
     resp = client.get(final_url)
     soup = BeautifulSoup(resp.content, "html.parser")
-    
+
     try: inputs = soup.find(id="go-link").find_all(name="input")
     except: return "Incorrect Link"
-    
+
     data = { input.get('name'): input.get('value') for input in inputs }
 
     h = { "x-requested-with": "XMLHttpRequest" }
-    
+
     time.sleep(10)
     r = client.post(f"{DOMAIN}/links/go", data=data, headers=h)
     try:
@@ -1722,10 +1666,7 @@ def olamovies(url):
     soup = BeautifulSoup(res.text,"html.parser")
     soup = soup.findAll("div", class_="wp-block-button")
 
-    outlist = []
-    for ele in soup:
-        outlist.append(ele.find("a").get("href"))
-
+    outlist = [ele.find("a").get("href") for ele in soup]
     slist = []
     for ele in outlist:
         try:
@@ -1733,7 +1674,7 @@ def olamovies(url):
             id = ele.split("&id=")[1]
         except:
             continue
-        
+
         count = 3
         params = { 'key': key, 'id': id}
         soup = "None"
@@ -1743,21 +1684,17 @@ def olamovies(url):
             res = client.get("https://olamovies.ink/download/", params=params, headers=headers)
             soup = BeautifulSoup(res.text,"html.parser")
             soup = soup.findAll("a")[0].get("href")
-            if soup != "":
-                if "try2link.com" in soup or 'rocklinks.net' in soup:
-                    # print("added", soup)
-                    slist.append(soup)
-                else:
-                    # print(soup, "not addded")
-                    pass
-            else:
+            if soup == "":
                 if count == 0:
                     # print('moving on')
                     break
                 else:
                     count -= 1
                     # print("retrying")
-                
+
+            elif "try2link.com" in soup or 'rocklinks.net' in soup:
+                # print("added", soup)
+                slist.append(soup)
             # print("waiting 10 secs")
             time.sleep(10)
 
@@ -1768,9 +1705,6 @@ def olamovies(url):
             final.append(rocklinks(ele))
         elif "try2link.com" in ele:
             final.append(try2link_bypass(ele))
-        else:
-            # print(ele)
-            pass
     #print(final)
     links = ""
     for ele in final:
